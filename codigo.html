@@ -1,0 +1,68 @@
+<pre>
+<font color="#5e6d03">#include</font> <font color="#434f54">&lt;</font><font color="#000000">Dynamixel_Serial</font><font color="#434f54">.</font><font color="#000000">h</font><font color="#434f54">&gt;</font>
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_ID</font> &nbsp;&nbsp;<font color="#000000">0x01</font>
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_ID_2</font> <font color="#000000">0x03</font>
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_ID_3</font> <font color="#000000">0x02</font>
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_ID_4</font> <font color="#000000">0x04</font>
+
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_ControlPin</font> <font color="#000000">0x02</font> 
+<font color="#5e6d03">#define</font> <font color="#000000">SERVO_SET_Baudrate</font> <font color="#000000">9600</font>
+<font color="#5e6d03">#define</font> <font color="#000000">CW_LIMIT_ANGLE_2</font> <font color="#000000">0x00</font> 
+<font color="#5e6d03">#define</font> <font color="#000000">CCW_LIMIT_ANGLE_2</font> <font color="#000000">0xFFF</font>
+<font color="#5e6d03">#define</font> <font color="#000000">CW_LIMIT_ANGLE</font> <font color="#000000">0x800</font> 
+<font color="#5e6d03">#define</font> <font color="#000000">CCW_LIMIT_ANGLE</font> <font color="#000000">0x400</font>
+
+<font color="#434f54">&#47;&#47;definción de variables</font>
+<font color="#00979c">String</font> <font color="#000000">entrada</font><font color="#434f54">=</font><font color="#005c5f">&#34;&#34;</font><font color="#000000">;</font> &nbsp;<font color="#434f54">&#47;&#47;variable que servirá para guardar la entrada del puerto serial</font>
+<font color="#00979c">String</font> <font color="#000000">encabezado</font><font color="#434f54">=</font><font color="#005c5f">&#34;&#34;</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;variable que servirá para saber si la instrucción recibida es valida</font>
+<font color="#00979c">String</font> <font color="#000000">angulo_inst</font><font color="#434f54">=</font><font color="#005c5f">&#34;&#34;</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47; el ángulo que se recibe a la entrada del puerto serial</font>
+<font color="#00979c">String</font> <font color="#000000">id</font><font color="#434f54">=</font><font color="#005c5f">&#34;&#34;</font><font color="#000000">;</font> &nbsp;&nbsp;<font color="#434f54">&#47;&#47;el identificador del motor que se desea controlar</font>
+<font color="#00979c">String</font> <font color="#000000">velocidad</font><font color="#434f54">=</font><font color="#005c5f">&#34;&#34;</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47; la velocidad recibida del puerto serial</font>
+<font color="#00979c">unsigned</font> <font color="#00979c">int</font> <font color="#000000">angulo_int</font><font color="#000000">;</font> &nbsp;<font color="#434f54">&#47;&#47;numero de 0 a 4095 que es el angulo que se envía al motor</font>
+<font color="#00979c">unsigned</font> <font color="#00979c">int</font> <font color="#000000">velocidad_int</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;velocidad que se envia al motor como entero</font>
+<font color="#00979c">int</font> <font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">0</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47; id en forma de entero</font>
+
+
+<font color="#00979c">void</font> <font color="#5e6d03">setup</font><font color="#000000">(</font><font color="#000000">)</font> <font color="#000000">{</font>
+ &nbsp;<b><font color="#d35400">Serial</font></b><font color="#434f54">.</font><font color="#d35400">begin</font><font color="#000000">(</font><font color="#000000">9600</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;se inicializa el puerto serial a un baudrate de 9600</font>
+ &nbsp;<b><font color="#d35400">Dynamixel</font></b><font color="#434f54">.</font><font color="#d35400">begin</font><font color="#000000">(</font><font color="#000000">SERVO_SET_Baudrate</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;se incializa la transmisión a los servos</font>
+ &nbsp;<b><font color="#d35400">Dynamixel</font></b><font color="#434f54">.</font><font color="#d35400">setMode</font><font color="#000000">(</font><font color="#000000">SERVO_ID</font><font color="#434f54">,</font> <font color="#00979c">SERVO</font><font color="#434f54">,</font> <font color="#000000">CW_LIMIT_ANGLE</font><font color="#434f54">,</font> <font color="#000000">CCW_LIMIT_ANGLE</font><font color="#000000">)</font><font color="#000000">;</font> 
+ &nbsp;<b><font color="#d35400">Dynamixel</font></b><font color="#434f54">.</font><font color="#d35400">setMode</font><font color="#000000">(</font><font color="#000000">SERVO_ID_2</font><font color="#434f54">,</font> <font color="#00979c">SERVO</font><font color="#434f54">,</font> <font color="#000000">CW_LIMIT_ANGLE_2</font><font color="#434f54">,</font> <font color="#000000">CCW_LIMIT_ANGLE_2</font><font color="#000000">)</font><font color="#000000">;</font>
+<font color="#000000">}</font>
+
+
+<font color="#00979c">void</font> <font color="#5e6d03">loop</font><font color="#000000">(</font><font color="#000000">)</font> <font color="#000000">{</font>
+ &nbsp;<font color="#434f54">&#47;&#47; Se lee el dato entrante del puerto serial</font>
+ &nbsp;<font color="#000000">entrada</font><font color="#434f54">=</font><b><font color="#d35400">Serial</font></b><font color="#434f54">.</font><font color="#d35400">readString</font><font color="#000000">(</font><font color="#000000">)</font><font color="#000000">;</font>
+ &nbsp;<font color="#434f54">&#47;&#47; Para que sea una instruccion validad los primeros dos caracteres del string deben ser do arrrobas(@@)</font>
+ &nbsp;<font color="#000000">encabezado</font><font color="#434f54">=</font><font color="#000000">entrada</font><font color="#434f54">.</font><font color="#d35400">substring</font><font color="#000000">(</font><font color="#000000">0</font><font color="#434f54">,</font><font color="#000000">2</font><font color="#000000">)</font><font color="#000000">;</font>
+ &nbsp;<font color="#5e6d03">if</font><font color="#000000">(</font><font color="#000000">encabezado</font><font color="#434f54">.</font><font color="#d35400">equals</font><font color="#000000">(</font><font color="#005c5f">&#34;@@&#34;</font><font color="#000000">)</font><font color="#000000">)</font><font color="#000000">{</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Si es una instruccion con el encabezado correcto se realiza el siguiente procedimiento</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">angulo_inst</font><font color="#434f54">=</font><font color="#000000">entrada</font><font color="#434f54">.</font><font color="#d35400">substring</font><font color="#000000">(</font><font color="#000000">2</font><font color="#434f54">,</font><font color="#000000">4</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;Se toma el angulo que deberia ser los caracteres 2 y 3</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">id</font><font color="#434f54">=</font><font color="#000000">entrada</font><font color="#434f54">.</font><font color="#d35400">substring</font><font color="#000000">(</font><font color="#000000">4</font><font color="#434f54">,</font><font color="#000000">5</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47; Se toma el id que deberia corresponder al 4 caracter</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">id</font><font color="#434f54">.</font><font color="#d35400">toInt</font><font color="#000000">(</font><font color="#000000">)</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#5e6d03">if</font><font color="#000000">(</font><font color="#000000">id</font><font color="#434f54">==</font><font color="#000000">1</font><font color="#000000">)</font><font color="#000000">{</font>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">0x01</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">}</font>
+ &nbsp;&nbsp;&nbsp;<font color="#5e6d03">if</font><font color="#000000">(</font><font color="#000000">id</font><font color="#434f54">==</font><font color="#000000">2</font><font color="#000000">)</font><font color="#000000">{</font>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">0x03</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">}</font>
+ &nbsp;&nbsp;&nbsp;<font color="#5e6d03">if</font><font color="#000000">(</font><font color="#000000">id</font><font color="#434f54">==</font><font color="#000000">3</font><font color="#000000">)</font><font color="#000000">{</font>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">0x02</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">}</font>
+ &nbsp;&nbsp;&nbsp;<font color="#5e6d03">if</font><font color="#000000">(</font><font color="#000000">id</font><font color="#434f54">==</font><font color="#000000">4</font><font color="#000000">)</font><font color="#000000">{</font>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#000000">id_int</font><font color="#434f54">=</font><font color="#000000">0x04</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">}</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">velocidad</font><font color="#434f54">=</font><font color="#000000">entrada</font><font color="#434f54">.</font><font color="#d35400">substring</font><font color="#000000">(</font><font color="#000000">5</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47; Se toma la velocidad que son los ultimos tres digitos</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">angulo_int</font><font color="#434f54">=</font><font color="#d35400">round</font><font color="#000000">(</font><font color="#000000">angulo_inst</font><font color="#434f54">.</font><font color="#d35400">toInt</font><font color="#000000">(</font><font color="#000000">)</font><font color="#434f54">*</font><font color="#000000">11.378</font><font color="#434f54">+</font><font color="#000000">1024</font><font color="#000000">)</font><font color="#000000">;</font> <font color="#434f54">&#47;&#47;Se convierte el angulo a un numero que va de 0 a 4095</font>
+ &nbsp;&nbsp;&nbsp;<font color="#000000">velocidad_int</font><font color="#434f54">=</font><font color="#000000">velocidad</font><font color="#434f54">.</font><font color="#d35400">toInt</font><font color="#000000">(</font><font color="#000000">)</font><font color="#000000">;</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Salidas para debugging</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Serial.println(entrada);</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Serial.println(angulo_int);</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Serial.println(id);</font>
+ &nbsp;&nbsp;&nbsp;<font color="#434f54">&#47;&#47;Serial.println(velocidad_int);</font>
+ &nbsp;&nbsp;&nbsp;<b><font color="#d35400">Dynamixel</font></b><font color="#434f54">.</font><font color="#d35400">servo</font><font color="#000000">(</font><font color="#000000">id_int</font><font color="#434f54">,</font><font color="#000000">angulo_int</font><font color="#434f54">,</font><font color="#000000">velocidad_int</font><font color="#000000">)</font><font color="#000000">;</font><font color="#434f54">&#47;&#47;se envian las instrucciones a los motores</font>
+ &nbsp;<font color="#000000">}</font>
+<font color="#000000">}</font>
+
+</pre>
